@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Task, TaskStatus } from './task.model';
 
@@ -20,5 +20,11 @@ export class TasksController {
       description: '',
       status: TaskStatus.OPEN,
     };
+  }
+
+  @Post()
+  postTask(@Body() body): Task {
+    console.log(body);
+    return this.tasksService.create(body.title, body.description);
   }
 }
