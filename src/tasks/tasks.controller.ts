@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get, HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Task, TaskStatus } from './task.model';
-import {CreateTaskDto} from './dto/create-task.dto';
+import { Task } from './task.model';
+import { Response } from 'express';
+import { CreateTaskDto } from './dto/create-task.dto';
 
 @Controller('tasks')
 export class TasksController {
@@ -13,14 +23,16 @@ export class TasksController {
   }
 
   @Get('/:id')
-  getTask(@Param() params): Task {
-    console.log(params.id);
-    return {
-      id: params.id,
-      title: '',
-      description: '',
-      status: TaskStatus.OPEN,
-    };
+  getTask(@Param('id') id): Task {
+    console.log(id);
+    return this.tasksService.get(id);
+  }
+
+  @Delete('/:id')
+  deleteTask(@Param('id') id: string, @Res() response: Response) {
+    const deletedTask = this.tasksService.delete(id);
+    const status = deletedTask ? HttpStatus.NO_CONTENT : HttpStatus.NOT_FOUND;
+    response.status(status).send();
   }
 
   @Post()
