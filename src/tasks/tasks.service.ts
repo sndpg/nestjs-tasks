@@ -1,7 +1,8 @@
-import {Injectable} from '@nestjs/common';
-import {Task, TaskStatus} from './task.model';
+import { Injectable } from '@nestjs/common';
+import { Task, TaskStatus } from './task.model';
 import * as uuid from 'uuid/v1';
-import {CreateTaskDto} from './dto/create-task.dto';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 
 @Injectable()
 export class TasksService {
@@ -17,6 +18,26 @@ export class TasksService {
 
   getAll(): Task[] {
     return [...this.tasks];
+  }
+
+  getAllFiltered(filterDto: GetTasksFilterDto): Task[] {
+    const { status, search } = filterDto;
+    let tasks = this.getAll();
+
+    if (status) {
+      tasks = tasks.filter(task => task.status === status);
+    }
+
+    if (search) {
+      tasks = tasks.filter(
+        task =>
+          task.status.includes(search) ||
+          task.description.includes(search) ||
+          task.id.includes(search),
+      );
+    }
+
+    return tasks;
   }
 
   get(id: string): Task {
@@ -40,21 +61,10 @@ export class TasksService {
     return deletedTask;
   }
 
-  patch(id: string, attributes: Map<string, any>): Task {
+  patch(id: string, attributes: any): Task {
     const task = this.tasks.find(task => task.id === id);
     if (task) {
-      if (attributes.has('title')) {
-        task.title = attributes.get('title');
-      }
-
-      if (attributes.has('description')) {
-        task.description = attributes.get('description');
-      }
-
-      const status = attributes.get('status');
-      if (status) {
-        task.status = status;
-      }
+      Object.assign(task, attributes);
     }
     return task;
   }

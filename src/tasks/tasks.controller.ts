@@ -7,20 +7,27 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Res,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Task, TaskStatus } from './task.model';
 import { Response } from 'express';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getTasks(): Task[] {
-    return this.tasksService.getAll();
+  getTasks(@Query() filterDto: GetTasksFilterDto): Task[] {
+    console.log(filterDto);
+    if (Object.keys(filterDto).length) {
+      return this.tasksService.getAllFiltered(filterDto);
+    } else {
+      return this.tasksService.getAll();
+    }
   }
 
   @Get('/:id')
@@ -45,18 +52,7 @@ export class TasksController {
     @Body() body,
     @Res() response: Response,
   ): void {
-    const attributes = new Map<string, any>();
-    if (body.description) {
-      attributes.set('description', body.description);
-    }
-    if (body.status) {
-      attributes.set('status', TaskStatus[body.status]);
-    }
-    if (body.title) {
-      attributes.set('title', body.title);
-    }
-
-    const task = this.tasksService.patch(id, attributes);
+    const task = this.tasksService.patch(id, body);
 
     if (task) {
       response.json(task).send();
@@ -74,10 +70,7 @@ export class TasksController {
     @Body('status') status: TaskStatus,
     @Res() response: Response,
   ) {
-    const attributes = new Map<string, any>();
-    attributes.set('status', status);
-
-    const task = this.tasksService.patch(id, attributes);
+    const task = this.tasksService.patch(id, {status});
 
     if (task) {
       response.json(task).send();
